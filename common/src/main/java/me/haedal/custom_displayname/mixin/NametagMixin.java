@@ -16,12 +16,11 @@ import java.util.List;
 public class NametagMixin {
     @ModifyVariable(method = "renderNameTag(Lnet/minecraft/client/renderer/entity/state/PlayerRenderState;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V", at = @At("HEAD"), argsOnly = true)
     private Component renderNameTag(Component value) {
-        List<Pair<String, String>> nicknamePairs = ConfigUtil.getConfig().getNicknamePairs();
+        List<Pair<String, MutableComponent>> nicknamePairs = ConfigUtil.getConfig().getNicknamePairs();
 
-        for (Pair<String, String> pair : nicknamePairs) {
+        for (Pair<String, MutableComponent> pair : nicknamePairs) {
             if (value.getString().contains(pair.getLeft())) {
-                MutableComponent replacement = Component.literal(pair.getRight());
-                value = ChatModifier.findAndReplace(value, pair.getLeft(), replacement);
+                value = ChatModifier.findAndReplace(value, pair.getLeft(), pair.getRight());
             }
         }
 

@@ -16,11 +16,11 @@ import java.util.List;
 public class TablistMixin {
     @ModifyVariable(method = "decorateName", at = @At("HEAD"), argsOnly = true)
     private MutableComponent decorateName(MutableComponent value) {
-        List<Pair<String, String>> nicknamePairs = ConfigUtil.getConfig().getNicknamePairs();
+        List<Pair<String, MutableComponent>> nicknamePairs = ConfigUtil.getConfig().getNicknamePairs();
 
-        for (Pair<String, String> pair : nicknamePairs) {
+        for (Pair<String, MutableComponent> pair : nicknamePairs) {
             if (value.getString().contains(pair.getLeft())) {
-                return ChatModifier.findAndReplace(value, pair.getLeft(), Component.literal(pair.getRight())).copy();
+                return ChatModifier.findAndReplace(value, pair.getLeft(), pair.getRight()).copy();
             }
         }
 

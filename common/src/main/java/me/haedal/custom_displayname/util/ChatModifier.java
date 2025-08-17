@@ -28,7 +28,17 @@ public class ChatModifier {
 
         MutableComponent newComponent = Component.literal("");
 
-        newComponent.append(text.replace(targetStr, replacement.getString())).withStyle(component.getStyle());
+        String[] parts = text.split(targetStr);
+
+        for (int i = 0; i < parts.length; i++) {
+            if (!parts[i].isEmpty()) {
+                newComponent.append(Component.literal(parts[i]).withStyle(component.getStyle()));
+            }
+
+            if (i < parts.length - 1) {
+                newComponent.append(replacement.copy().withStyle(replacement.getStyle().isEmpty() ? component.getStyle() : replacement.getStyle()));
+            }
+        }
 
         return newComponent;
     }
