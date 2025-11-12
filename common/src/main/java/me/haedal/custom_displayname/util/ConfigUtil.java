@@ -1,19 +1,18 @@
 package me.haedal.custom_displayname.util;
 
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import me.haedal.custom_displayname.config.ModConfigPlayers;
+import me.haedal.custom_displayname.config.PlayerEntry;
+import net.minecraft.network.chat.MutableComponent;
+
 public final class ConfigUtil {
-    private static ConfigProvider provider;
-
-    public static void setProvider(ConfigProvider provider) {
-        if (ConfigUtil.provider != null) {
-            throw new IllegalStateException("ConfigProvider has already been set.");
-        }
-        ConfigUtil.provider = provider;
-    }
-
-    public static ConfigProvider getConfig() {
-        if (provider == null) {
-            throw new IllegalStateException("ConfigProvider has not been set.");
-        }
-        return provider;
+    public static List<Pair<String, MutableComponent>> getNicknamePairs() {
+        List<PlayerEntry> entries = ModConfigPlayers.entries;
+        return entries.stream()
+                .map(entry -> Pair.of(entry.field1, ComponentParser.parse(entry.field2)))
+                .toList();
     }
 }

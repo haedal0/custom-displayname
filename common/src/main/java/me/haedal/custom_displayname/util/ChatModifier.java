@@ -1,45 +1,85 @@
 package me.haedal.custom_displayname.util;
 
-import me.haedal.custom_displayname.CustomDisplayname;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class ChatModifier {
+
     public static Component findAndReplace(Component component, String targetStr, Component replacement) {
-        MutableComponent modifiedComponent = findAndReplaceInSingleComponent(component.plainCopy().withStyle(component.getStyle()), targetStr, replacement);
+        if (component == null) {
+            return null;
+        }
+
+        List<Component> parts = new ArrayList<>();
+        parts.add(processComponent(component, targetStr, replacement));
 
         for (Component sibling : component.getSiblings()) {
-            modifiedComponent.append(findAndReplace(sibling, targetStr, replacement));
+            parts.add(findAndReplace(sibling, targetStr, replacement));
         }
 
-        return modifiedComponent;
+        MutableComponent result = Component.empty();
+        for (Component part : parts) {
+            result.append(part);
+        }
+        return result;
     }
 
-    private static MutableComponent findAndReplaceInSingleComponent(Component component, String targetStr, Component replacement) {
-        String text = component.getString();
+    private static Component processComponent(Component component, String targetStr, Component replacement) {
+        Object contents = component.getContents();
 
-        if (!text.contains(targetStr)) {
-            return component.copy();
-        }
+        if (contents instanceof TranslatableContents translatableContents) {
+            Object[] originalArgs = translatableContents.getArgs();
+            Object[] newArgs = new Object[originalArgs.length];
 
-        if (text.equals(targetStr)) {
-            return replacement.copy().withStyle(component.getStyle());
-        }
-
-        MutableComponent newComponent = Component.literal("");
-
-        String[] parts = text.split(targetStr);
-
-        for (int i = 0; i < parts.length; i++) {
-            if (!parts[i].isEmpty()) {
-                newComponent.append(Component.literal(parts[i]).withStyle(component.getStyle()));
+            for (int i = 0; i < originalArgs.length; i++) {
+                if (originalArgs[i] instanceof Component argComponent) {
+                    newArgs[i] = findAndReplace(argComponent, targetStr, replacement);
+                } else {
+                    newArgs[i] = originalArgs[i];
+                }
             }
 
-            if (i < parts.length - 1) {
-                newComponent.append(replacement.copy().withStyle(replacement.getStyle().isEmpty() ? component.getStyle() : replacement.getStyle()));
-            }
-        }
+            MutableComponent newTranslatable = Component.translatable(translatableContents.getKey(), newArgs);
+            newTranslatable.withStyle(component.getStyle());
+            return newTranslatable;
+        } else {
+            MutableComponent siblinglessCopy = component.copy();
+            siblinglessCopy.getSiblings().clear();
 
-        return newComponent;
+            Optional<Component> result = siblinglessCopy.visit((style, text) -> {
+                if (text.isEmpty() || !text.contains(targetStr)) {
+                    return Optional.of(Component.literal(text).withStyle(style));
+                }
+
+                MutableComponent newComponent = Component.empty();
+                int lastIndex = 0;
+                int findIndex;
+
+                while ((findIndex = text.indexOf(targetStr, lastIndex)) != -1) {
+                    if (findIndex > lastIndex) {
+                        newComponent.append(Component.literal(text.substring(lastIndex, findIndex)).withStyle(style));
+                    }
+                    MutableComponent styledReplacement = replacement.copy();
+                    if (replacement.getStyle().isEmpty()) {
+                        styledReplacement.setStyle(style);
+                    }
+                    newComponent.append(styledReplacement);
+                    lastIndex = findIndex + targetStr.length();
+                }
+
+                if (lastIndex < text.length()) {
+                    newComponent.append(Component.literal(text.substring(lastIndex)).withStyle(style));
+                }
+
+                return Optional.of(newComponent);
+            }, siblinglessCopy.getStyle());
+
+            return result.orElse(siblinglessCopy);
+        }
     }
 }

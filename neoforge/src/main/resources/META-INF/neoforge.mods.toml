@@ -27,11 +27,5 @@ versionRange = "[1.21.8,)"
 ordering = "NONE"
 side = "CLIENT"
 
-[[dependencies.custom_displayname]]
-modId = "cloth_config"
-type = "required"
-ordering = "AFTER"
-side = "CLIENT"
-
 [[mixins]]
 config = "custom_displayname.mixins.json"
