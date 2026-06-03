@@ -1,27 +1,8 @@
 plugins {
     id 'java'
-    id 'net.fabricmc.fabric-loom' version '1.16-SNAPSHOT'
 }
 
-repositories {
-    maven { url "https://maven.fabricmc.net/" }
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modCompileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    implementation "com.google.code.gson:gson:2.10.1"
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
-}
+// Common sources are compiled as part of :fabric and :neoforge via srcDirs inclusion.
+// Disable standalone Java compilation to avoid missing MC/Mixin classpath issues.
+tasks.named('compileJava') { enabled = false }
+tasks.named('classes') { enabled = false }
