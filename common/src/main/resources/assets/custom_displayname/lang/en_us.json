@@ -1,4 +1,15 @@
 {
   "text.autoconfig.custom_displayname.title": "Custom Display Name Configuration",
-  "text.autoconfig.custom_displayname.option.nicknames": "Nicknames"
+  "text.autoconfig.custom_displayname.option.nicknames": "Nicknames",
+
+  "custom_displayname.config.title":        "Player Display Names",
+  "custom_displayname.config.add":          "+ Add",
+  "custom_displayname.config.save":         "Save & Exit",
+  "custom_displayname.config.cancel":       "Cancel",
+  "custom_displayname.config.col.player":   "Player Name",
+  "custom_displayname.config.col.display":  "Display Name",
+  "custom_displayname.config.col.preview":  "Preview",
+  "custom_displayname.config.empty":        "No entries. Click '+ Add' to get started.",
+  "custom_displayname.config.hint":         "Format tags: <red>, <bold>, <italic>, <#RRGGBB>, <reset>",
+  "custom_displayname.config.error.empty":  "Player name cannot be empty."
 }

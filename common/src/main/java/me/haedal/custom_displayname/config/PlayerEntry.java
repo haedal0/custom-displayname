@@ -1,14 +1,18 @@
 package me.haedal.custom_displayname.config;
 
+import com.google.gson.annotations.SerializedName;
+
 public class PlayerEntry {
-    public String name = "Player";
-    public String field1 = "";
-    public String field2 = "";
+    @SerializedName(value = "playerName", alternate = "field1")
+    public String playerName = "";
+
+    @SerializedName(value = "displayName", alternate = "field2")
+    public String displayName = "";
 
     public PlayerEntry() {}
-    public PlayerEntry(String name) {
-        this.name = name;
-        this.field1 = name;
-        this.field2 = name;
+
+    public PlayerEntry(String playerName) {
+        this.playerName = playerName;
+        this.displayName = playerName;
     }
 }

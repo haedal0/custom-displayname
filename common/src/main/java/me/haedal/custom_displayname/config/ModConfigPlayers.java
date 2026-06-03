@@ -1,6 +1,7 @@
 package me.haedal.custom_displayname.config;
 
 import me.haedal.custom_displayname.CustomDisplayname;
+import me.haedal.custom_displayname.util.ConfigUtil;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
@@ -31,6 +32,8 @@ public class ModConfigPlayers {
             }
         } catch (IOException e) {
             CustomDisplayname.LOGGER.error("Failed to load custom displayname config", e);
+        } finally {
+            ConfigUtil.invalidate();
         }
     }
 
@@ -42,6 +45,8 @@ public class ModConfigPlayers {
             }
         } catch (IOException e) {
             CustomDisplayname.LOGGER.error("Failed to save custom displayname config", e);
+        } finally {
+            ConfigUtil.invalidate();
         }
     }
 }

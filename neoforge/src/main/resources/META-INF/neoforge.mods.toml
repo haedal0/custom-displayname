@@ -23,7 +23,7 @@ side = "CLIENT"
 [[dependencies.custom_displayname]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.8,)"
+versionRange = "[26.1,)"
 ordering = "NONE"
 side = "CLIENT"
 

@@ -1,5 +1,6 @@
 package me.haedal.custom_displayname.util;
 
+import me.haedal.custom_displayname.util.ConfigUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -9,6 +10,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class ChatModifier {
+
+    public static Component applyNicknames(Component value) {
+        if (value == null) return null;
+        for (var pair : ConfigUtil.getNicknamePairs()) {
+            if (value.getString().contains(pair.getLeft())) {
+                value = findAndReplace(value, pair.getLeft(), pair.getRight());
+            }
+        }
+        return value;
+    }
 
     public static Component findAndReplace(Component component, String targetStr, Component replacement) {
         if (component == null) {

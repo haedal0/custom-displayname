@@ -1,4 +1,15 @@
 {
   "text.autoconfig.custom_displayname.title": "커스텀 디스플레이 이름 설정",
-  "text.autoconfig.custom_displayname.option.nicknames": "닉네임"
+  "text.autoconfig.custom_displayname.option.nicknames": "닉네임",
+
+  "custom_displayname.config.title":        "플레이어 표시 이름",
+  "custom_displayname.config.add":          "+ 추가",
+  "custom_displayname.config.save":         "저장 후 닫기",
+  "custom_displayname.config.cancel":       "취소",
+  "custom_displayname.config.col.player":   "플레이어 이름",
+  "custom_displayname.config.col.display":  "표시 이름",
+  "custom_displayname.config.col.preview":  "미리보기",
+  "custom_displayname.config.empty":        "항목이 없습니다. '+ 추가'를 눌러 시작하세요.",
+  "custom_displayname.config.hint":         "포맷 태그: <red>, <bold>, <italic>, <#RRGGBB>, <reset>",
+  "custom_displayname.config.error.empty":  "플레이어 이름을 입력해야 합니다."
 }

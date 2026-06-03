@@ -1,8 +1,8 @@
 package me.haedal.custom_displayname.util;
 
-import me.haedal.custom_displayname.config.PlayerSkinFetcher;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import me.haedal.custom_displayname.util.PlayerSkinFetcher;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.world.entity.player.PlayerSkin;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ public class HeadRenderer {
     private final Map<String, PlayerSkin> skinCache = new HashMap<>();
     private final Map<String, CompletableFuture<PlayerSkin>> pending = new HashMap<>();
 
-    public void draw(GuiGraphics g, String playerName, int x, int y, int size) {
+    public void draw(GuiGraphicsExtractor g, String playerName, int x, int y, int size) {
         if (playerName == null || playerName.isEmpty()) {
             return;
         }
@@ -37,13 +37,11 @@ public class HeadRenderer {
         });
     }
 
-    
-
-    private void renderHead(GuiGraphics g, PlayerSkin skin, int x, int y, int size) {
+    private void renderHead(GuiGraphicsExtractor g, PlayerSkin skin, int x, int y, int size) {
         g.pose().pushMatrix();
         g.pose().translate(x, y);
         g.pose().scale(size / 8f, size / 8f);
-        PlayerFaceRenderer.draw(g, skin, 0, 0, 8);
+        PlayerFaceExtractor.extractRenderState(g, skin, 0, 0, 8);
         g.pose().popMatrix();
     }
 }

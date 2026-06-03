@@ -3,7 +3,7 @@ package me.haedal.custom_displayname.config;
 import me.haedal.custom_displayname.util.ClientRenderUtil;
 import me.haedal.custom_displayname.util.ComponentParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -20,6 +20,7 @@ public class PlayerEntryWidget extends AbstractWidget {
     private static final int FIELD_ABSOLUTE_MIN_WIDTH = 40;
     private static final int FIELD_GAP = 8;
     private static final int FIELD_HEIGHT = 20;
+    private static final int CONTROL_TOP_PADDING = 4;
     private static final int PREVIEW_PADDING = 6;
     private static final int REMOVE_BUTTON_MARGIN = 10;
 
@@ -27,133 +28,123 @@ public class PlayerEntryWidget extends AbstractWidget {
 
     private final Minecraft mc = Minecraft.getInstance();
     private final PlayerEntry entry;
-    private final EditBox field1Box;
-    private final EditBox field2Box;
+    private final EditBox nameBox;
+    private final EditBox displayBox;
     private Component preview;
     private final Button removeButton;
 
     private long lastTypedTime = 0;
     private static final long DEBOUNCE_DELAY = 500;
-    private String nameToRender;
-
+    private String headName;
 
     public PlayerEntryWidget(int index, PlayerEntry entry, Consumer<PlayerEntryWidget> onRemove) {
         super(0, index * ROW_HEIGHT, DEFAULT_WIDGET_WIDTH, ROW_HEIGHT, Component.literal("PlayerEntry"));
-
         this.entry = entry;
 
-        this.field1Box = new EditBox(mc.font, 0, 0, FIELD_MAX_WIDTH, FIELD_HEIGHT, Component.literal("Field1"));
-        this.field2Box = new EditBox(mc.font, 0, 0, FIELD_MAX_WIDTH, FIELD_HEIGHT, Component.literal("Field2"));
-        this.field1Box.setValue(entry.field1);
-        this.field2Box.setValue(entry.field2);
-        this.preview = ComponentParser.parse(field2Box.getValue());
-        this.nameToRender = entry.field1;
-        this.field1Box.setResponder(s -> this.lastTypedTime = System.currentTimeMillis());
-        this.field2Box.setResponder(s -> this.preview = ComponentParser.parse(s));
+        this.nameBox    = new EditBox(mc.font, 0, 0, FIELD_MAX_WIDTH, FIELD_HEIGHT, Component.translatable("custom_displayname.config.col.player"));
+        this.displayBox = new EditBox(mc.font, 0, 0, FIELD_MAX_WIDTH, FIELD_HEIGHT, Component.translatable("custom_displayname.config.col.display"));
+        this.nameBox.setValue(entry.playerName);
+        this.displayBox.setValue(entry.displayName);
+        this.preview = ComponentParser.parse(displayBox.getValue());
+        this.headName = entry.playerName;
+        this.nameBox.setResponder(s -> this.lastTypedTime = System.currentTimeMillis());
+        this.displayBox.setResponder(s -> this.preview = ComponentParser.parse(s));
 
         this.removeButton = Button.builder(Component.literal("-"), b -> onRemove.accept(this))
                 .pos(300, 0).size(20, 20).build();
     }
 
-
-    public void render(GuiGraphics g, int x, int y, int width, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphicsExtractor g, int x, int y, int width, int mouseX, int mouseY, float delta) {
         this.setX(x);
         this.setY(y);
         this.setWidth(Math.max(0, width));
-        this.renderWidget(g, mouseX, mouseY, delta);
+        this.extractWidgetRenderState(g, mouseX, mouseY, delta);
     }
 
-    public EditBox getField1Box() {
-        return field1Box;
-    }
-
-    public EditBox getField2Box() {
-        return field2Box;
-    }
-
-    public Button getRemoveButton() {
-        return removeButton;
-    }
+    public EditBox getNameBox()    { return nameBox; }
+    public EditBox getDisplayBox() { return displayBox; }
+    public Button  getRemoveButton() { return removeButton; }
 
     public void save() {
-        entry.field1 = field1Box.getValue();
-        entry.field2 = field2Box.getValue();
+        entry.playerName  = nameBox.getValue();
+        entry.displayName = displayBox.getValue();
     }
 
     public void tick() {
         if (System.currentTimeMillis() - lastTypedTime > DEBOUNCE_DELAY) {
-            if (!field1Box.getValue().equals(nameToRender)) {
-                nameToRender = field1Box.getValue();
-            }
+            String current = nameBox.getValue();
+            if (!current.equals(headName)) headName = current;
         }
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        int top = getY();
-        int left = getX();
-        int widgetWidth = Math.max(0, this.getWidth());
+    protected void extractWidgetRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        positionControls();
+        drawPreview(g);
+        ClientRenderUtil.drawHead(g, headName, headX(), headY(), HEAD_SIZE);
+        nameBox.extractRenderState(g, mouseX, mouseY, partialTick);
+        displayBox.extractRenderState(g, mouseX, mouseY, partialTick);
+        removeButton.extractRenderState(g, mouseX, mouseY, partialTick);
 
-        int controlY = top + 4;
-        int rightEdge = left + widgetWidth;
+        if (mouseX >= displayBox.getX() && mouseX <= displayBox.getX() + displayBox.getWidth()
+                && mouseY >= displayBox.getY() && mouseY <= displayBox.getY() + FIELD_HEIGHT) {
+            g.setTooltipForNextFrame(mc.font, Component.translatable("custom_displayname.config.hint"), mouseX, mouseY);
+        }
+    }
 
-        field1Box.setY(controlY);
-        field2Box.setY(controlY);
+    private void positionControls() {
+        int controlY  = getY() + CONTROL_TOP_PADDING;
+        int rightEdge = getX() + Math.max(0, getWidth());
+
+        nameBox.setY(controlY);
+        displayBox.setY(controlY);
         removeButton.setY(controlY);
 
         int removeX = rightEdge - removeButton.getWidth() - REMOVE_BUTTON_MARGIN;
         removeButton.setX(removeX);
 
-        int headX = left + HEAD_MARGIN_LEFT;
-        int headY = controlY + Math.max(0, (FIELD_HEIGHT - HEAD_SIZE) / 2);
-
-        int baseX = headX + HEAD_SIZE + FIELD_GAP;
+        int baseX         = getX() + HEAD_MARGIN_LEFT + HEAD_SIZE + FIELD_GAP;
         int maxFieldRight = removeX - PREVIEW_PADDING;
-        int availableForFields = Math.max(0, maxFieldRight - baseX);
+        int available     = Math.max(0, maxFieldRight - baseX);
 
-        int fieldWidth = availableForFields > 0 ? (availableForFields - FIELD_GAP) / 2 : FIELD_MIN_WIDTH;
-        fieldWidth = Math.max(FIELD_MIN_WIDTH, Math.min(FIELD_MAX_WIDTH, fieldWidth));
+        int fieldWidth = clampFieldWidth(available);
 
-        if (fieldWidth * 2 + FIELD_GAP > availableForFields) {
-            fieldWidth = Math.max(FIELD_ABSOLUTE_MIN_WIDTH, (availableForFields - FIELD_GAP) / 2);
-        }
-        fieldWidth = Math.max(FIELD_ABSOLUTE_MIN_WIDTH, fieldWidth);
-
-        int field1X = baseX;
-        int field2X = field1X + fieldWidth + FIELD_GAP;
-
-        if (field2X + fieldWidth > maxFieldRight) {
-            field2X = Math.max(field1X, maxFieldRight - fieldWidth);
-            field1X = Math.max(baseX, field2X - fieldWidth - FIELD_GAP);
+        int nameX    = baseX;
+        int displayX = nameX + fieldWidth + FIELD_GAP;
+        if (displayX + fieldWidth > maxFieldRight) {
+            displayX = Math.max(nameX, maxFieldRight - fieldWidth);
+            nameX    = Math.max(baseX, displayX - fieldWidth - FIELD_GAP);
         }
 
-        field1Box.setX(field1X);
-        field2Box.setX(field2X);
-        field1Box.setWidth(fieldWidth);
-        field2Box.setWidth(fieldWidth);
-
-        int previewAreaLeft = field2X + fieldWidth + PREVIEW_PADDING;
-        int previewAreaRight = removeX - PREVIEW_PADDING;
-        if (previewAreaRight < previewAreaLeft) {
-            previewAreaRight = previewAreaLeft;
-        }
-
-        Component previewComponent = this.preview != null ? this.preview : Component.empty();
-        int previewAvailable = Math.max(0, previewAreaRight - previewAreaLeft);
-        int previewY = controlY + (FIELD_HEIGHT - mc.font.lineHeight) / 2;
-        if (previewAvailable > 0 && !previewComponent.getString().isEmpty()) {
-            g.drawWordWrap(mc.font, previewComponent, previewAreaLeft, previewY, previewAvailable, 0xFFFFFFFF);
-        }
-
-        ClientRenderUtil.drawHead(g, nameToRender, headX, headY, HEAD_SIZE);
-
-        field1Box.render(g, mouseX, mouseY, partialTick);
-        field2Box.render(g, mouseX, mouseY, partialTick);
-        removeButton.render(g, mouseX, mouseY, partialTick);
+        nameBox.setX(nameX);    nameBox.setWidth(fieldWidth);
+        displayBox.setX(displayX); displayBox.setWidth(fieldWidth);
     }
+
+    private int clampFieldWidth(int available) {
+        int w = available > 0 ? (available - FIELD_GAP) / 2 : FIELD_MIN_WIDTH;
+        w = Math.max(FIELD_MIN_WIDTH, Math.min(FIELD_MAX_WIDTH, w));
+        if (w * 2 + FIELD_GAP > available) w = Math.max(FIELD_ABSOLUTE_MIN_WIDTH, (available - FIELD_GAP) / 2);
+        return Math.max(FIELD_ABSOLUTE_MIN_WIDTH, w);
+    }
+
+    private void drawPreview(GuiGraphicsExtractor g) {
+        int controlY     = getY() + CONTROL_TOP_PADDING;
+        int removeX      = getX() + Math.max(0, getWidth()) - removeButton.getWidth() - REMOVE_BUTTON_MARGIN;
+        int previewLeft  = displayBox.getX() + displayBox.getWidth() + PREVIEW_PADDING;
+        int previewRight = removeX - PREVIEW_PADDING;
+        int previewWidth = Math.max(0, previewRight - previewLeft);
+        if (previewWidth <= 0) return;
+
+        Component text = this.preview != null ? this.preview : Component.empty();
+        if (text.getString().isEmpty()) return;
+
+        int previewY = controlY + (FIELD_HEIGHT - mc.font.lineHeight) / 2;
+        g.textWithWordWrap(mc.font, text, previewLeft, previewY, previewWidth, 0xFFFFFFFF);
+    }
+
+    private int headX() { return getX() + HEAD_MARGIN_LEFT; }
+    private int headY() { return getY() + CONTROL_TOP_PADDING + Math.max(0, (FIELD_HEIGHT - HEAD_SIZE) / 2); }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-
-    }
+    protected void updateWidgetNarration(NarrationElementOutput output) {}
 }
